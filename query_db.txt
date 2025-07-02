@@ -1,0 +1,30 @@
+-- Database: dokumen_db
+CREATE DATABASE IF NOT EXISTS dokumen_db;
+USE dokumen_db;
+
+-- Tabel Users
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Tabel Dokumen
+CREATE TABLE IF NOT EXISTS dokumen (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    doc_name VARCHAR(255) NOT NULL,
+    doc_date DATE NOT NULL,
+    doc_number VARCHAR(100) NOT NULL,
+    doc_desc TEXT,
+    image_path VARCHAR(500),
+    doc_year VARCHAR(4),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_doc_year (doc_year),
+    INDEX idx_doc_date (doc_date)
+);
