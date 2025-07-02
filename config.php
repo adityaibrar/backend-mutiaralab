@@ -12,8 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 // Database configuration
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
-define('DB_PASS', 'abdillah24'); // Ganti dengan password database Anda
-define('DB_NAME', 'dokumen');
+define('DB_PASS', ''); // Ganti dengan password database Anda
+define('DB_NAME', 'dokumen_db');
 
 class Database {
     private $connection;
