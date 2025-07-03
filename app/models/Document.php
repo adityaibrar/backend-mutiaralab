@@ -10,19 +10,31 @@ class Document {
         $this->db = new Database;
     }
 
-    public function getDocumentById($id) {
-        $this->db->query("SELECT doc_year, COUNT(*) as document_count, 
-                            MAX(created_at) as last_modified
-                            FROM" . $this->table ." 
-                            WHERE user_id = :user_id 
-                            GROUP BY doc_year 
-                            ORDER BY doc_year DESC");
+    public function getAllDocument($filter, $limit, $offset, $params) {
+        $this->db->query("SELECT id, doc_name, doc_date, doc_number, doc_desc, image_path, doc_year, created_at 
+                            FROM dokumen 
+                            WHERE {$filter} 
+                            ORDER BY created_at DESC 
+                            LIMIT :limit OFFSET :offset");
+        foreach ($params as $key => $value) {
+            $this->db->bind($key, $value);
+        }
 
-        $this->db->bind(':user_id', $id);
+        $this->db->bind(':limit', $limit);
+        $this->db->bind(':offset', $offset);
         return $this->db->getAll();
     }
 
-    public function uploadDocument($userId, $docName, $mysqlDate, $docNumber, $docDesc, $filePath, $docYear) {
+    public function getDocumentCount($whereClause, $params) {
+        $this->db->query("SELECT COUNT(*) as total FROM dokumen WHERE {$whereClause}");
+        foreach ($params as $key => $value) {
+            $this->db->bind($key, $value);
+        }
+        $result = $this->db->getOne();
+        return $result["total"];
+    }
+
+    public function createDocument($userId, $docName, $mysqlDate, $docNumber, $docDesc, $filePath, $docYear) {
         $this->db->query("INSERT INTO 
                             ". $this->table ." (user_id, doc_name, doc_date, doc_number, doc_desc, image_path, doc_year) 
                             VALUES (:user_id, :doc_name, :doc_date, :doc_number, :doc_desc, :image_path, :doc_year)");
@@ -36,7 +48,7 @@ class Document {
 
         $this->db->execute();
 
-        return $this->db->rowCount();
+        return $this->db->lastInsertId();
     }
 
     public function updateDocument($user_id, $document_id, $updateFields) {
