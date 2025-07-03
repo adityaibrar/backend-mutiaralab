@@ -1,22 +1,8 @@
-<?php 
+<?php
+require_once '../app/config/config.php';
+require_once '../app/core/route.php';
 
-require_once("app/init.php");
+$controller = isset($_GET['controller']) ? $_GET['controller'] : 'auth';
+$action = isset($_GET['action']) ? $_GET['action'] : 'index';
 
-$action = isset($_GET['action']) ? $_GET['action'] : '';
-
-switch ($action) {
-    case 'register':
-        register($db);
-        break;
-    case 'login':
-        login($db);
-        break;
-    case 'check_username':
-        checkUsername($db);
-        break;
-    default:
-        sendResponse(false, "Invalid action");
-        break;
-}
-
-?>
+Router::route(ucfirst($controller), $action);

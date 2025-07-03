@@ -1,7 +1,5 @@
 <?php
 
-require_once("config/database.php");
-require_once("helper/helpers.php");
 
 class User {
     private $table = "users";
@@ -29,7 +27,7 @@ class User {
         $this->db->bind(":password", $password);
         $this->db->execute();
 
-        return $this->db->rowCount();
+        return $this->db->lastInsertId();
     }
 
     
