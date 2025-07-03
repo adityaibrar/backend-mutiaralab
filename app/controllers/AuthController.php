@@ -1,9 +1,6 @@
 <?php
 
-require_once '../app/core/Database.php';
-require_once '../app/models/User.php';
-require_once '../app/core/Response.php';
-require_once '../app/helpers/helpers.php';
+
 
 class AuthController {
     private $userModel;
