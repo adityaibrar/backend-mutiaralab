@@ -34,6 +34,17 @@ class Document {
         return $result["total"];
     }
 
+    public function getDocumentByUserId($user_id) {
+        $this->db->query("SELECT doc_year, COUNT(*) as document_count, 
+                            MAX(created_at) as last_modified
+                            FROM dokumen 
+                            WHERE user_id = :user_id 
+                            GROUP BY doc_year 
+                            ORDER BY doc_year DESC");
+        $this->db->bind(":user_id", $user_id);
+        return $this->db->getAll();
+    }
+
     public function createDocument($userId, $docName, $mysqlDate, $docNumber, $docDesc, $filePath, $docYear) {
         $this->db->query("INSERT INTO 
                             ". $this->table ." (user_id, doc_name, doc_date, doc_number, doc_desc, image_path, doc_year) 
@@ -62,6 +73,24 @@ class Document {
 
         return $this->db->rowCount();
     }
+
+    public function getDocumentPath($document_id, $user_id) {
+        $this->db->query("SELECT image_path FROM dokumen WHERE id = :document_id AND user_id = :user_id");
+        $this->db->bind(":document_id", $document_id);
+        $this->db->bind(":user_id", $user_id);
+
+        return $this->db->getOne();
+    }
+
+    public function deleteDocument($document_id, $user_id) {
+        $this->db->query("DELETE FROM dokumen WHERE id = :document_id AND user_id = :user_id");
+        $this->db->bind(":document_id", $document_id);
+        $this->db->bind(":user_id", $user_id);
+        $this->db->execute();
+
+        return $this->db->rowCount();
+    }
+
 
 }
 

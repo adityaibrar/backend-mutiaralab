@@ -148,6 +148,129 @@ class DocumentController {
            
         }
     }
+
+    public function show() {
+        $userId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
+
+        if ($userId <= 0) {
+            Response::json(false, "Valid user ID is required", 400);
+        }
+
+        try {
+
+            $albums = $this->documentModel->getDocumentByUserId($userId);
+    
+            $formatAlbums = array();
+    
+            foreach ($albums as $album) {
+                $formattedAlbums[] = array(
+                    "name" => $album['doc_year'],
+                    "path" => "uploads/" . $album['doc_year'],
+                    "fileCount" => (int)$album['document_count'],
+                    "lastModified" => strtotime($album['last_modified']) * 1000 // Convert to milliseconds for Android
+                );
+            }
+
+            Response::json(true, "Albums retrieved successfully", 200, array(
+                            "albums" => $formattedAlbums
+                        ));
+        } catch (PDOException $exception) {
+            Response::json(false, "Database error: " . $exception->getMessage(), 400);
+        }
+
+
+    }
+
+    public function update() {
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (!isset($input['document_id']) || !isset($input['user_id'])) {
+            Response::json(false, "Document ID and User ID are required", 400);
+        }
+
+        $documentId = (int)$input['document_id'];
+        $userId = (int)$input['user_id'];
+
+        $updateFields = array();
+        $params = array(':document_id' => $documentId, ':user_id' => $userId);
+
+        if (isset($input['doc_name'])) {
+            $updateFields[] = "doc_name = :doc_name";
+            $params[':doc_name'] = validateInput($input['doc_name']);
+        }
+
+        if (isset($input['doc_date'])) {
+            $docDate = validateInput($input['doc_date']);
+            $dateObj = DateTime::createFromFormat('d-m-Y', $docDate);
+            if ($dateObj) {
+                $updateFields[] = "doc_date = :doc_date";
+                $updateFields[] = "doc_year = :doc_year";
+                $params[':doc_date'] = $dateObj->format('Y-m-d');
+                $params[':doc_year'] = $dateObj->format('Y');
+            }
+        }
+
+        if (isset($input['doc_number'])) {
+            $updateFields[] = "doc_number = :doc_number";
+            $params[':doc_number'] = validateInput($input['doc_number']);
+        }
+
+        if (isset($input['doc_desc'])) {
+            $updateFields[] = "doc_desc = :doc_desc";
+            $params[':doc_desc'] = validateInput($input['doc_desc']);
+        }
+
+        if (empty($updateFields)) {
+            Response::json(false, "No fields to update", 400);
+        }
+
+        try {
+            if($this->documentModel->updateDocument($userId, $documentId, $updateFields) > 0) {
+                Response::json(true, "Document updated successfully", 200);
+            } else {
+                Response::json(true, "Document not found or no changes made", 400);
+            }
+        } catch (PDOException $exception) {
+            Response::json(false, "Database error: " . $exception->getMessage(), 400);
+        }
+    }
+
+    public function delete() {
+
+        $input = json_decode(file_get_contents('php://input'), true);
+       
+
+        if (!isset($input['document_id']) || !isset($input['user_id'])) {
+            Response::json(false, "Document ID and User ID are required", 400);
+        }
+
+        
+
+        $documentId = (int)$input['document_id'];
+        $userId = (int)$input['user_id'];
+        
+        try {
+            $document = $this->documentModel->getDocumentPath($documentId, $userId); 
+            if(!$document) {
+                Response::json(false, "Document not found or access denied", 400);
+            }
+            $data = $this->documentModel->deleteDocument($documentId, $userId);
+            var_dump($data);
+            
+
+            if($data) {
+                if(!empty($document['image_path']) && file_exists($document['image_path'])) {
+                    unlink($document['image_path']);
+                }
+
+                Response::json(true, "Document deleted successfully", 200);
+            } else {
+                Response::json(false, "Failed to delete document", 400);
+            }
+        } catch (PDOException $exception) {
+            Response::json(false, "Database error: " . $exception->getMessage(), 400);
+        }
+    }
 }
 
 
